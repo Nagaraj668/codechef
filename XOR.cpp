@@ -1,106 +1,78 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include <fstream>
-#include <string>
 
 using namespace std;
-int done_count;
+int done_count = 0;
 int T;
-int MAX_X = 18;
-
-int log(string log_msg)
-{
-    std::ofstream outfile;
-    outfile.open("logs.txt", std::ios_base::app);
-    outfile << log_msg + "\n";
-    return 0;
-}
+int MAX_X = 2500;
+std::vector<long long int> answer;
 
 int main()
 {
+    std::ios_base::sync_with_stdio(false);
     std::cin >> T;
-    std::vector<long long int> answer(T);
+    std::vector<std::vector<long long int>> input_wrapper;
 
-    for (int i = 0; i < T; i++)
+    for (register int i = 0; i < T; i++)
     {
         int N;
         std::cin >> N;
         std::vector<long long int> input;
+        answer.push_back(-1);
+
         long long int inp;
-        for (int j = 0; j < N; j++)
+        for (register int j = 0; j < N; j++)
         {
             std::cin >> inp;
             input.push_back(inp);
         }
 
-        log("input values: ");
-        for (int j = 0; j < N; j++)
-        {
-            log(to_string(input[j]));
-        }
+        input_wrapper.push_back(input);
 
-        log("Processing index" + to_string(i));
-        int x = 0;
-        while (true)
+        auto process = [](std::vector<long long int> input_array, int i, int data_len)
         {
-            if (N == 1)
+            for (register int x = 0; x <= MAX_X; x++)
             {
-                long long int bigInteger = input[0];
-                if (bigInteger == 0)
+                if (data_len == 1)
                 {
-                    answer[i] = 0;
+                    long long int bigInteger = input_array[0];
+                    if (bigInteger == 0)
+                    {
+                        answer[i] = 0;
+                    }
                     break;
                 }
                 else
                 {
-                    answer[i] = -1;
-                    break;
+                    long long int xor_value = (input_array[0] + x) ^ (input_array[1] + (x));
+                    for (register int m = 2; m < data_len; m++)
+                    {
+                        xor_value = xor_value ^ (input_array[m] + (x));
+                    }
+                    if (xor_value == 0)
+                    {
+                        answer[i] = (x);
+                        break;
+                    }
                 }
             }
-            else
+
+            done_count++;
+
+            if (done_count == T)
             {
-                long long int xor_value = (input[0] + x) ^ (input[1] + (x));
-                log("data_len value: " + to_string(N));
-
-                log(to_string((input[0] + x)));
-                log(to_string((input[1] + x)));
-                log(to_string((input[2] + x)));
-
-                log("(input[0] + x) ^ (input[1] + x) ^ (input[2] + x)): ");
-                log(to_string((input[0] + x) ^ (input[1] + x) ^ (input[2] + x)));
-
-                log(to_string(xor_value));
-
-                for (int m = 2; m < N; m++)
+                for (register int k = 0; k < T; k++)
                 {
-                    xor_value = xor_value ^ (input[m] + (x));
-                }
-
-                log("xor value: " + to_string(xor_value));
-                if (xor_value == 0)
-                {
-                    log("xor value is 0, x value: " + to_string(x));
-                    answer[i] = x;
-                    break;
+                    std::cout << answer[k] << "\n";
                 }
             }
-            x = x + 1;
-            if (x == (MAX_X))
-            {
-                answer[i] = -1;
-                break;
-            }
-        }
+            return 0;
+        };
 
-        done_count++;
-        if (done_count == T)
-        {
-            for (int k = 0; k < T; k++)
-            {
-                std::cout << answer[k] << endl;
-            }
-        }
+        thread th(process, std::ref(input_wrapper[i]), i, N);
+        th.join();
     }
+
     return 0;
 }
